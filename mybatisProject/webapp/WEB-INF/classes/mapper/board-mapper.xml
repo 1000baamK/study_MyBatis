@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="boardMapper"> <!-- namespace : mapper 고유 별칭 -->
+	
+	<select id="selectListCount" resultType="_int">
+		SELECT COUNT(*)
+		FROM BOARD
+		WHERE STATUS = 'Y'
+	</select>
+	
+	<select id="selectList" resultMap="boardResultSet">
+		SELECT BOARD_NO
+			  ,BOARD_TITLE
+			  ,USER_ID
+			  ,COUNT
+			  ,CREATE_DATE
+		FROM BOARD B
+		JOIN MEMBER M ON (BOARD_WRITER = USER_NO)
+		WHERE B.STATUS = 'Y'
+		ORDER BY CREATE_DATE DESC
+	</select>
+	
+	<resultMap type="Board" id="boardResultSet">
+		<result column="BOARD_NO" property="boardNo"/>
+		<result column="BOARD_TITLE" property="boardTitle"/>
+		<result column="BOARD_CONTENT" property="boardContent"/>
+		<result column="USER_ID" property="boardWriter"/>
+		<result column="COUNT" property="count"/>
+		<result column="CREATE_DATE" property="createDate"/>
+	</resultMap>
+	
+	<!-- 
+	<update id="countUp">
+		UPDATE BOARD
+		SET COUNT = COUNT+1
+		WHERE STATUS = 'Y'
+		AND BOARD_NO = #{boardNo}
+	</update>
+	
+	<select id="selectBoard" resultMap="boardResultSet">
+		SELECT BOARD_NO
+			  ,BOARD_TITLE
+			  ,BOARD_CONTENT
+			  ,USER_ID
+			  ,COUNT
+			  ,CREATE_DATE
+		FROM BOARD B
+		JOIN MEMBER M ON (BOARD_WRITER = USER_NO)
+		WHERE B.STATUS = 'Y'
+		AND BOARD_NO = #{boardNo}
+	</select>
+	 -->
+	 
+	<update id="increaseCount" parameterType="_int">
+	 	UPDATE BOARD
+		SET COUNT = COUNT+1
+		WHERE STATUS = 'Y'
+		AND BOARD_NO = #{boardNo}
+	</update>
+	
+	<select id="selectBoard" resultMap="boardResultSet" parameterType="_int">
+		SELECT BOARD_NO
+			  ,BOARD_TITLE
+			  ,BOARD_CONTENT
+			  ,USER_ID
+			  ,COUNT
+			  ,CREATE_DATE
+		FROM BOARD B
+		JOIN MEMBER M ON (BOARD_WRITER = USER_NO)
+		WHERE B.STATUS = 'Y'
+		AND BOARD_NO = #{boardNo}
+	</select>
+	
+	<select id="selectReplyList" resultMap="replyResultSet">
+		SELECT REPLY_NO
+			  ,REPLY_CONTENT
+			  ,USER_ID
+			  ,CREATE_DATE
+		FROM REPLY R
+		JOIN MEMBER M ON (REPLY_WRITER = USER_NO)
+		WHERE REF_BNO = #{boardNo}
+		AND R.STATUS = 'Y'
+		ORDER BY CREATE_DATE DESC
+	</select>
+	
+	<resultMap type="Reply" id="replyResultSet">
+		<result column="REPLY_NO" property="replyNo"/>
+		<result column="REPLY_CONTENT" property="replyContent"/>
+		<result column="USER_ID" property="replyWriter"/>
+		<result column="CREATE_DATE" property="createDate"/>
+	</resultMap>
+	
+	
+	<select id="selectSearchCount" resultType="_int">
+		SELECT COUNT(*)
+		FROM BOARD B
+		JOIN MEMBER M ON (BOARD_WRITER = USER_NO)
+		WHERE B.STATUS = 'Y'
+		<if test="status == 'title'">
+			AND BOARD_TITLE	
+		</if>
+		<if test="status == 'writer'">
+			AND USER_ID
+		</if>
+		<if test="status == 'content'">
+			AND BOARD_CONTENT
+		</if>
+		LIKE '%'||#{keyword}||'%'
+	</select>
+	
+	
+	
+	<select id="selectSearchList" resultMap="boardResultSet" parameterType="hashmap">
+		SELECT BOARD_NO
+			  ,BOARD_TITLE
+			  ,USER_ID
+			  ,COUNT
+			  ,CREATE_DATE
+		FROM BOARD B
+		JOIN MEMBER M ON (BOARD_WRITER = USER_NO)
+		WHERE B.STATUS = 'Y'
+		<choose>
+			<when test="status == 'title'">
+				AND BOARD_TITLE	
+			</when>
+			<when test="status == 'writer'">
+				AND USER_ID
+			</when>
+			<when test="status == 'content'">
+				AND BOARD_CONTENT
+			</when>
+		</choose>
+		LIKE '%'||#{keyword}||'%'
+		ORDER BY CREATE_DATE DESC
+	</select>
+</mapper>
